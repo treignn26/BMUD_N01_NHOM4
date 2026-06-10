@@ -28,6 +28,11 @@ class User(db.Model):
         nullable=False
     )
 
+    kdf_salt = db.Column(
+        db.String(64),
+        nullable=False
+    )
+
     failed_attempts = db.Column(
         db.Integer,
         default=0

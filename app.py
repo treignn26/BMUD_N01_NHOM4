@@ -11,6 +11,9 @@ from models import PasswordEntry
 from security import encrypt_password
 from security import decrypt_password
 from security import check_password_strength
+from security import generate_kdf_salt
+from security import derive_vault_key
+import os
 import random
 import string
 from models import ActivityLog
@@ -21,8 +24,13 @@ from flask import flash
 from datetime import datetime, timedelta
 app = Flask(__name__)
 
-app.config["SECRET_KEY"] = "passwordmanager"
+app.config["SECRET_KEY"] = os.environ.get(
+    "SECRET_KEY",
+    os.urandom(32).hex()
+)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///password_manager.db"
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 db.init_app(app)
 
@@ -60,6 +68,14 @@ def register():
         if existing_user:
             return "Email đã tồn tại"
 
+        if check_password_strength(password) == "Yếu":
+            flash(
+                "Mật khẩu quá yếu. Hãy dùng ít nhất 8 ký tự, "
+                "gồm chữ hoa, chữ thường, số và ký tự đặc biệt.",
+                "danger"
+            )
+            return render_template("register.html")
+
         hashed_password = bcrypt.generate_password_hash(
             password
         ).decode("utf-8")
@@ -67,7 +83,8 @@ def register():
         user = User(
             username=username,
             email=email,
-            password_hash=hashed_password
+            password_hash=hashed_password,
+            kdf_salt=generate_kdf_salt()
         )
 
         db.session.add(user)
@@ -108,6 +125,10 @@ def login():
 
             session["user_id"] = user.id
             session["username"] = user.username
+            session["vault_key"] = derive_vault_key(
+                password,
+                user.kdf_salt
+            )
             write_log(
                 user.id,
                 "Login"
@@ -181,7 +202,10 @@ def add_password():
             password
         )
 
-        encrypted = encrypt_password(password)
+        encrypted = encrypt_password(
+            password,
+            session["vault_key"]
+        )
 
         entry = PasswordEntry(
             website=website,
@@ -243,7 +267,8 @@ def view_password(id):
         return "Không có quyền truy cập"
 
     decrypted = decrypt_password(
-        entry.encrypted_password
+        entry.encrypted_password,
+        session["vault_key"]
     )
     return render_template(
         "view_password.html",
@@ -273,7 +298,8 @@ def edit_password(id):
         new_password = request.form["password"]
 
         entry.encrypted_password = encrypt_password(
-            new_password
+            new_password,
+            session["vault_key"]
         )
 
         db.session.commit()
@@ -382,11 +408,47 @@ def change_password():
         ):
             return "Mật khẩu cũ không đúng"
 
+        if check_password_strength(new_password) == "Yếu":
+            flash(
+                "Mật khẩu mới quá yếu. Hãy dùng ít nhất 8 ký tự, "
+                "gồm chữ hoa, chữ thường, số và ký tự đặc biệt.",
+                "danger"
+            )
+            return render_template("change_password.html")
+
+        old_vault_key = derive_vault_key(
+            old_password,
+            user.kdf_salt
+        )
+
+        new_salt = generate_kdf_salt()
+        new_vault_key = derive_vault_key(
+            new_password,
+            new_salt
+        )
+
+        entries = PasswordEntry.query.filter_by(
+            user_id=user.id
+        ).all()
+
+        for entry in entries:
+            plain = decrypt_password(
+                entry.encrypted_password,
+                old_vault_key
+            )
+            entry.encrypted_password = encrypt_password(
+                plain,
+                new_vault_key
+            )
+
         user.password_hash = bcrypt.generate_password_hash(
             new_password
         ).decode("utf-8")
+        user.kdf_salt = new_salt
 
         db.session.commit()
+
+        session["vault_key"] = new_vault_key
 
         write_log(
             session["user_id"],

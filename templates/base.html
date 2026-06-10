@@ -11,6 +11,64 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
           rel="stylesheet">
+
+    <style>
+        :root {
+            --pm-bg: #fafafa;
+            --pm-accent: #8a94a6;
+            --pm-accent-dark: #6f7888;
+        }
+
+        body {
+            background-color: var(--pm-bg);
+        }
+
+        .navbar.bg-primary {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .navbar.bg-primary .navbar-brand {
+            color: #4a4a4a !important;
+        }
+
+        .card {
+            border: 1px solid #eee;
+            border-radius: 1rem;
+        }
+
+        .form-control {
+            border-radius: 0.6rem;
+        }
+
+        .btn-primary {
+            background-color: var(--pm-accent);
+            border-color: var(--pm-accent);
+            border-radius: 0.6rem;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--pm-accent-dark);
+            border-color: var(--pm-accent-dark);
+        }
+
+        .btn-success {
+            border-radius: 0.6rem;
+        }
+
+        .text-primary {
+            color: var(--pm-accent) !important;
+        }
+
+        .auth-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 56px);
+        }
+    </style>
+
+    {% block extra_style %}{% endblock %}
 </head>
 
 <body class="bg-light">
@@ -52,7 +110,7 @@
     {% endwith %}
 
 </div>
-<div class="container mt-4">
+<div class="container{% block content_container_class %} mt-4{% endblock %}">
 
     {% block content %}
     {% endblock %}
