@@ -142,7 +142,11 @@ def login():
                     "Vui lòng thử lại sau 5 phút.",
                     "danger"
                 )
-                return render_template("login.html", next=next_url)
+                return render_template(
+                    "login.html",
+                    next=next_url,
+                    locked=True
+                )
         if user and bcrypt.check_password_hash(
             user.password_hash,
             password
@@ -304,25 +308,69 @@ def view_password(id):
 
         user = User.query.get(session["user_id"])
 
+        if user.locked_until and user.locked_until > datetime.utcnow():
+            flash(
+                "Tài khoản đã bị khóa do nhập sai quá nhiều lần. "
+                "Vui lòng thử lại sau 5 phút.",
+                "danger"
+            )
+            return render_template(
+                "confirm_password.html",
+                entry=entry,
+                locked=True
+            )
+
         if bcrypt.check_password_hash(
             user.password_hash,
             request.form["confirm_password"]
         ):
+            user.failed_attempts = 0
+            user.locked_until = None
+            db.session.commit()
+
             session["vault_unlocked_until"] = (
                 datetime.utcnow()
                 + timedelta(minutes=VAULT_UNLOCK_MINUTES)
             ).isoformat()
         else:
+            user.failed_attempts += 1
+
+            if user.failed_attempts >= 5:
+                user.locked_until = (
+                    datetime.utcnow()
+                    + timedelta(minutes=5)
+                )
+                user.failed_attempts = 0
+
+            db.session.commit()
+
             flash("Mật khẩu không đúng", "danger")
             return render_template(
                 "confirm_password.html",
-                entry=entry
+                entry=entry,
+                locked=bool(user.locked_until)
             )
 
     if not is_vault_unlocked():
+
+        user = User.query.get(session["user_id"])
+
+        is_locked = bool(
+            user.locked_until
+            and user.locked_until > datetime.utcnow()
+        )
+
+        if is_locked:
+            flash(
+                "Tài khoản đã bị khóa do nhập sai quá nhiều lần. "
+                "Vui lòng thử lại sau 5 phút.",
+                "danger"
+            )
+
         return render_template(
             "confirm_password.html",
-            entry=entry
+            entry=entry,
+            locked=is_locked
         )
 
     decrypted = decrypt_password(
@@ -462,6 +510,7 @@ def change_password():
 
         old_password = request.form["old_password"]
         new_password = request.form["new_password"]
+        confirm_new_password = request.form["confirm_new_password"]
 
         user = User.query.get(
             session["user_id"]
@@ -471,7 +520,12 @@ def change_password():
             user.password_hash,
             old_password
         ):
-            return "Mật khẩu cũ không đúng"
+            flash("Mật khẩu cũ không đúng", "danger")
+            return render_template("change_password.html")
+
+        if new_password != confirm_new_password:
+            flash("Mật khẩu mới nhập lại không khớp", "danger")
+            return render_template("change_password.html")
 
         if check_password_strength(new_password) == "Yếu":
             flash(
