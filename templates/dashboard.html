@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card shadow-sm mb-4">
+
+    <div class="card-body">
+
+        <h3>
+            <i class="bi bi-person-circle"></i>
+            Xin chào {{ username }}
+        </h3>
+
+        <div class="row mb-4">
+
+            <div class="col-md-4">
+
+                <div class="card bg-primary text-white shadow">
+
+                    <div class="card-body text-center">
+
+                        <h5 class="card-title">
+
+                            <i class="bi bi-key-fill"></i>
+
+                            Tổng mật khẩu
+
+                        </h5>
+
+                        <h1>
+                            {{ total_passwords }}
+                        </h1>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <p class="text-muted">
+            Quản lý mật khẩu của bạn an toàn.
+        </p>
+
+    </div>
+
+</div>
+
+<div class="mb-4 d-flex gap-2 flex-wrap">
+
+    <a href="/add_password"
+       class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i>
+        Thêm mật khẩu
+    </a>
+
+    <a href="/generate_password"
+       class="btn btn-success">
+        <i class="bi bi-key"></i>
+        Sinh mật khẩu
+    </a>
+
+    <a href="/export_csv"
+       class="btn btn-info">
+        <i class="bi bi-download"></i>
+        Xuất CSV
+    </a>
+
+    <a href="/logs"
+       class="btn btn-secondary">
+        <i class="bi bi-clock-history"></i>
+        Nhật ký
+    </a>
+
+    <a href="/change_password"
+        class="btn btn-dark">
+        <i class="bi bi-shield-lock"></i>
+        Đổi mật khẩu
+    </a>
+
+    <a href="/logout"
+       class="btn btn-danger">
+        <i class="bi bi-box-arrow-right"></i>
+        Đăng xuất
+    </a>
+
+</div>
+
+<form method="GET"
+      action="/dashboard"
+      class="mb-3">
+
+    <div class="input-group">
+
+        <input
+            type="text"
+            name="keyword"
+            class="form-control"
+            placeholder="Tìm website"
+            value="{{ request.args.get('keyword', '') }}">
+
+        <button
+            class="btn btn-primary">
+
+            <i class="bi bi-search"></i>
+            Tìm kiếm
+
+        </button>
+
+    </div>
+
+</form>
+
+<table class="table table-hover shadow-sm bg-white">
+
+    <thead class="table-dark">
+
+        <tr>
+            <th>#</th>
+            <th>Website</th>
+            <th>Username</th>
+            <th>Password</th>
+            <th>Hành động</th>
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+        {% for p in passwords %}
+
+        <tr>
+
+            <td>{{ loop.index }}</td>
+
+            <td>{{ p.website }}</td>
+
+            <td>{{ p.account_username }}</td>
+
+            <td>********</td>
+
+            <td>
+
+                <a href="/view_password/{{ p.id }}"
+                   class="btn btn-info btn-sm">
+                    Xem
+                </a>
+
+                <a href="/edit_password/{{ p.id }}"
+                   class="btn btn-warning btn-sm">
+                    Sửa
+                </a>
+
+                <a href="/delete_password/{{ p.id }}"
+                   class="btn btn-danger btn-sm"
+                   onclick="return confirm('Bạn có chắc muốn xóa?')">
+                    Xóa
+                </a>
+
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+        {% if not passwords %}
+
+        <tr>
+
+            <td colspan="5" class="text-center">
+                Không tìm thấy dữ liệu
+            </td>
+
+        </tr>
+
+        {% endif %}
+
+    </tbody>
+
+</table>
+
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card shadow border-0">
+
+    <div class="card-header bg-dark text-white">
+
+        <h3 class="mb-0">
+            <i class="bi bi-clock-history"></i>
+            Nhật ký hoạt động
+        </h3>
+
+    </div>
+
+    <div class="card-body">
+
+        {% if logs %}
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead class="table-primary">
+
+                    <tr>
+                        <th width="20%">#</th>
+                        <th width="40%">Hành động</th>
+                        <th width="40%">Thời gian</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for log in logs %}
+
+                    <tr>
+
+                        <td>
+                            {{ loop.index }}
+                        </td>
+
+                        <td>
+
+                            {% if log.action == "Login" %}
+                                <span class="badge bg-success">
+                                    Đăng nhập
+                                </span>
+
+                            {% elif log.action == "Logout" %}
+                                <span class="badge bg-secondary">
+                                    Đăng xuất
+                                </span>
+
+                            {% elif log.action == "Add Password" %}
+                                <span class="badge bg-primary">
+                                    Thêm mật khẩu
+                                </span>
+
+                            {% elif log.action == "Edit Password" %}
+                                <span class="badge bg-warning text-dark">
+                                    Sửa mật khẩu
+                                </span>
+
+                            {% elif log.action == "Delete Password" %}
+                                <span class="badge bg-danger">
+                                    Xóa mật khẩu
+                                </span>
+
+                            {% elif log.action == "View Password" %}
+                                <span class="badge bg-info text-dark">
+                                    Xem mật khẩu
+                                </span>
+
+                            {% else %}
+                                <span class="badge bg-dark">
+                                    {{ log.action }}
+                                </span>
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+                            {{ log.created_at.strftime('%d/%m/%Y %H:%M:%S') }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="alert alert-info">
+
+            Chưa có hoạt động nào.
+
+        </div>
+
+        {% endif %}
+
+        <div class="mt-3">
+
+            <a href="/dashboard"
+               class="btn btn-primary">
+
+                <i class="bi bi-arrow-left"></i>
+                Quay lại Dashboard
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
