@@ -36,6 +36,26 @@ db.init_app(app)
 
 bcrypt = Bcrypt(app)
 
+VAULT_UNLOCK_MINUTES = 3
+
+
+def is_vault_unlocked():
+    unlocked_until = session.get("vault_unlocked_until")
+
+    if not unlocked_until:
+        return False
+
+    return datetime.fromisoformat(unlocked_until) > datetime.utcnow()
+
+
+def is_safe_next_url(target):
+    return (
+        bool(target)
+        and target.startswith("/")
+        and not target.startswith("//")
+    )
+
+
 def write_log(user_id, action):
 
     log = ActivityLog(
@@ -66,7 +86,8 @@ def register():
         ).first()
 
         if existing_user:
-            return "Email đã tồn tại"
+            flash("Email đã tồn tại", "danger")
+            return render_template("register.html")
 
         if check_password_strength(password) == "Yếu":
             flash(
@@ -90,6 +111,10 @@ def register():
         db.session.add(user)
         db.session.commit()
 
+        flash(
+            "Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.",
+            "success"
+        )
         return redirect(url_for("login"))
 
     return render_template("register.html")
@@ -97,6 +122,8 @@ def register():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+
+    next_url = request.values.get("next", "")
 
     if request.method == "POST":
 
@@ -110,10 +137,12 @@ def login():
 
             if user.locked_until > datetime.utcnow():
 
-                return """
-                Tài khoản đã bị khóa do nhập sai quá nhiều lần.
-                Vui lòng thử lại sau 5 phút.
-                """
+                flash(
+                    "Tài khoản đã bị khóa do nhập sai quá nhiều lần. "
+                    "Vui lòng thử lại sau 5 phút.",
+                    "danger"
+                )
+                return render_template("login.html", next=next_url)
         if user and bcrypt.check_password_hash(
             user.password_hash,
             password
@@ -133,6 +162,10 @@ def login():
                 user.id,
                 "Login"
             )
+
+            if is_safe_next_url(next_url):
+                return redirect(next_url)
+
             return redirect(url_for("dashboard"))
 
         if user:
@@ -150,16 +183,17 @@ def login():
 
             db.session.commit()
 
-        return "Sai tài khoản hoặc mật khẩu"
+        flash("Sai tài khoản hoặc mật khẩu", "danger")
+        return render_template("login.html", next=next_url)
 
-    return render_template("login.html")
+    return render_template("login.html", next=next_url)
 
 
 @app.route("/dashboard")
 def dashboard():
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("login", next=request.path))
 
     keyword = request.args.get("keyword")
 
@@ -188,7 +222,7 @@ def dashboard():
 def add_password():
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("login", next=request.path))
 
     strength = None
 
@@ -237,7 +271,7 @@ def add_password():
 def generate_password():
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("login", next=request.path))
 
     characters = (
         string.ascii_letters +
@@ -255,21 +289,52 @@ def generate_password():
         password=password
     )
 
-@app.route("/view_password/<int:id>")
+@app.route("/view_password/<int:id>", methods=["GET", "POST"])
 def view_password(id):
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("login", next=request.path))
 
     entry = PasswordEntry.query.get_or_404(id)
 
     if entry.user_id != session["user_id"]:
         return "Không có quyền truy cập"
 
+    if request.method == "POST":
+
+        user = User.query.get(session["user_id"])
+
+        if bcrypt.check_password_hash(
+            user.password_hash,
+            request.form["confirm_password"]
+        ):
+            session["vault_unlocked_until"] = (
+                datetime.utcnow()
+                + timedelta(minutes=VAULT_UNLOCK_MINUTES)
+            ).isoformat()
+        else:
+            flash("Mật khẩu không đúng", "danger")
+            return render_template(
+                "confirm_password.html",
+                entry=entry
+            )
+
+    if not is_vault_unlocked():
+        return render_template(
+            "confirm_password.html",
+            entry=entry
+        )
+
     decrypted = decrypt_password(
         entry.encrypted_password,
         session["vault_key"]
     )
+
+    write_log(
+        session["user_id"],
+        f"View Password ({entry.website})"
+    )
+
     return render_template(
         "view_password.html",
         entry=entry,
@@ -280,7 +345,7 @@ def view_password(id):
 def edit_password(id):
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("login", next=request.path))
 
     entry = PasswordEntry.query.get_or_404(id)
 
@@ -318,7 +383,7 @@ def edit_password(id):
 def delete_password(id):
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("login", next=request.path))
 
     entry = PasswordEntry.query.get_or_404(id)
 
@@ -337,7 +402,7 @@ def delete_password(id):
 def logs():
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("login", next=request.path))
 
     logs = ActivityLog.query.filter_by(
         user_id=session["user_id"]
@@ -354,7 +419,7 @@ def logs():
 def export_csv():
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("login", next=request.path))
 
     passwords = PasswordEntry.query.filter_by(
         user_id=session["user_id"]
@@ -391,7 +456,7 @@ def export_csv():
 def change_password():
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("login", next=request.path))
 
     if request.method == "POST":
 

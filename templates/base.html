@@ -66,6 +66,37 @@
             justify-content: center;
             min-height: calc(100vh - 56px);
         }
+
+        .table {
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .table thead {
+            background-color: #f0f1f5;
+        }
+
+        .table thead th {
+            border-bottom: none;
+            color: #4a4a4a;
+            font-weight: 600;
+            padding-top: 0.9rem;
+            padding-bottom: 0.9rem;
+        }
+
+        .table tbody td {
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
+            vertical-align: middle;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #f7f8fa;
+        }
+
+        .btn-outline-secondary {
+            border-radius: 0.6rem;
+        }
     </style>
 
     {% block extra_style %}{% endblock %}
