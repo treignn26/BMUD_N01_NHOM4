@@ -221,13 +221,38 @@ def dashboard():
         )
 
     passwords = query.all()
+    strong_count = 0
+    medium_count = 0
+    weak_count = 0
+
+    for p in passwords:
+
+        decrypted = decrypt_password(
+            p.encrypted_password
+        )
+
+        strength = check_password_strength(
+            decrypted
+        )
+
+        if strength == "Mạnh":
+            strong_count += 1
+
+        elif strength == "Trung bình":
+            medium_count += 1
+
+        else:
+            weak_count += 1
     total_passwords = len(passwords)
 
     return render_template(
         "dashboard.html",
         username=session["username"],
         passwords=passwords,
-        total_passwords=total_passwords   
+        total_passwords=len(passwords),
+        strong_count=strong_count,
+        medium_count=medium_count,
+        weak_count=weak_count
     )
 
 @app.route("/add_password", methods=["GET", "POST"])

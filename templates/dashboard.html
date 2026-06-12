@@ -4,34 +4,30 @@
 
 <div class="card shadow-sm mb-4">
 
-    <div class="card-body">
+```
+<div class="card-body">
 
-        <h3 class="mb-4">
-            <i class="bi bi-person-circle text-primary"></i>
-            Xin chào {{ username }}
-        </h3>
+    <h3 class="mb-4">
+        <i class="bi bi-person-circle text-primary"></i>
+        Xin chào {{ username }}
+    </h3>
 
-        <div class="row mb-3">
+    <div class="row mb-4">
 
-            <div class="col-md-4">
+        <div class="col-md-3">
 
-                <div class="card bg-primary text-white shadow">
+            <div class="card border-primary shadow">
 
-                    <div class="card-body text-center">
+                <div class="card-body text-center">
 
-                        <h5 class="card-title">
+                    <h6>
+                        <i class="bi bi-key-fill"></i>
+                        Tổng mật khẩu
+                    </h6>
 
-                            <i class="bi bi-key-fill"></i>
-
-                            Tổng mật khẩu
-
-                        </h5>
-
-                        <h1>
-                            {{ total_passwords }}
-                        </h1>
-
-                    </div>
+                    <h2 class="text-primary">
+                        {{ total_passwords }}
+                    </h2>
 
                 </div>
 
@@ -39,52 +35,120 @@
 
         </div>
 
-        <p class="text-muted mb-0">
-            Quản lý mật khẩu của bạn an toàn.
-        </p>
+        <div class="col-md-3">
+
+            <div class="card border-success shadow">
+
+                <div class="card-body text-center">
+
+                    <h6>
+                        <i class="bi bi-shield-check"></i>
+                        Mạnh
+                    </h6>
+
+                    <h2 class="text-success">
+                        {{ strong_count }}
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card border-warning shadow">
+
+                <div class="card-body text-center">
+
+                    <h6>
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Trung bình
+                    </h6>
+
+                    <h2 class="text-warning">
+                        {{ medium_count }}
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card border-danger shadow">
+
+                <div class="card-body text-center">
+
+                    <h6>
+                        <i class="bi bi-shield-x"></i>
+                        Yếu
+                    </h6>
+
+                    <h2 class="text-danger">
+                        {{ weak_count }}
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
 
     </div>
+
+    <p class="text-muted mb-0">
+        Quản lý mật khẩu của bạn an toàn.
+    </p>
+
+</div>
+```
 
 </div>
 
 <div class="mb-4 d-flex gap-2 flex-wrap">
 
-    <a href="/add_password"
-       class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i>
-        Thêm mật khẩu
-    </a>
+```
+<a href="/add_password"
+   class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i>
+    Thêm mật khẩu
+</a>
 
-    <a href="/generate_password"
-       class="btn btn-success">
-        <i class="bi bi-key"></i>
-        Sinh mật khẩu
-    </a>
+<a href="/generate_password"
+   class="btn btn-success">
+    <i class="bi bi-key"></i>
+    Sinh mật khẩu
+</a>
 
-    <a href="/export_csv"
-       class="btn btn-info">
-        <i class="bi bi-download"></i>
-        Xuất CSV
-    </a>
+<a href="/export_csv"
+   class="btn btn-info">
+    <i class="bi bi-download"></i>
+    Xuất CSV
+</a>
 
-    <a href="/logs"
-       class="btn btn-secondary">
-        <i class="bi bi-clock-history"></i>
-        Nhật ký
-    </a>
+<a href="/logs"
+   class="btn btn-secondary">
+    <i class="bi bi-clock-history"></i>
+    Nhật ký
+</a>
 
-    <a href="/change_password"
-        class="btn btn-dark">
-        <i class="bi bi-shield-lock"></i>
-        Đổi mật khẩu
-    </a>
+<a href="/change_password"
+   class="btn btn-dark">
+    <i class="bi bi-shield-lock"></i>
+    Đổi mật khẩu
+</a>
 
-    <a href="/logout"
-       class="btn btn-danger"
-       onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
-        <i class="bi bi-box-arrow-right"></i>
-        Đăng xuất
-    </a>
+<a href="/logout"
+   class="btn btn-danger"
+   onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
+    <i class="bi bi-box-arrow-right"></i>
+    Đăng xuất
+</a>
+```
 
 </div>
 
@@ -92,32 +156,35 @@
       action="/dashboard"
       class="mb-3">
 
-    <div class="input-group">
+```
+<div class="input-group">
 
-        <input
-            type="text"
-            name="keyword"
-            class="form-control"
-            placeholder="Tìm website"
-            value="{{ request.args.get('keyword', '') }}">
+    <input
+        type="text"
+        name="keyword"
+        class="form-control"
+        placeholder="Tìm website"
+        value="{{ request.args.get('keyword', '') }}">
 
-        <button
-            class="btn btn-primary">
+    <button
+        class="btn btn-primary">
 
-            <i class="bi bi-search"></i>
-            Tìm kiếm
+        <i class="bi bi-search"></i>
+        Tìm kiếm
 
-        </button>
+    </button>
 
-    </div>
+</div>
+```
 
 </form>
 
 <div class="table-responsive shadow-sm">
 
+```
 <table class="table table-hover bg-white align-middle mb-0">
 
-    <thead>
+    <thead class="table-dark">
 
         <tr>
             <th>#</th>
@@ -141,18 +208,22 @@
 
             <td>{{ p.account_username }}</td>
 
-            <td><span class="text-muted">********</span></td>
+            <td>
+                <span class="text-muted">
+                    ********
+                </span>
+            </td>
 
             <td>
 
                 <a href="/view_password/{{ p.id }}"
-                   class="btn btn-outline-secondary btn-sm">
+                   class="btn btn-outline-info btn-sm">
                     <i class="bi bi-eye"></i>
                     Xem
                 </a>
 
                 <a href="/edit_password/{{ p.id }}"
-                   class="btn btn-outline-secondary btn-sm">
+                   class="btn btn-outline-warning btn-sm">
                     <i class="bi bi-pencil"></i>
                     Sửa
                 </a>
@@ -174,8 +245,11 @@
 
         <tr>
 
-            <td colspan="5" class="text-center text-muted py-4">
+            <td colspan="5"
+                class="text-center text-muted py-4">
+
                 Không tìm thấy dữ liệu
+
             </td>
 
         </tr>
@@ -185,6 +259,7 @@
     </tbody>
 
 </table>
+```
 
 </div>
 
