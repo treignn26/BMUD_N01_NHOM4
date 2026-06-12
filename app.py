@@ -31,6 +31,9 @@ app.config["SECRET_KEY"] = os.environ.get(
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///password_manager.db"
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(
+    minutes=15
+)
 
 db.init_app(app)
 
@@ -136,7 +139,11 @@ def login():
         if user and user.locked_until:
 
             if user.locked_until > datetime.utcnow():
-
+                if user:
+                    write_log(
+                        user.id,
+                        "Failed Login"
+                    )               
                 flash(
                     "Tài khoản đã bị khóa do nhập sai quá nhiều lần. "
                     "Vui lòng thử lại sau 5 phút.",
@@ -156,6 +163,7 @@ def login():
 
             db.session.commit()
 
+            session.permanent = True
             session["user_id"] = user.id
             session["username"] = user.username
             session["vault_key"] = derive_vault_key(
@@ -257,7 +265,7 @@ def add_password():
 
         write_log(
             session["user_id"],
-            "Add Password"
+            f"Add Password ({website})"
         )
 
         flash(
@@ -286,6 +294,11 @@ def generate_password():
     password = "".join(
         random.choice(characters)
         for _ in range(16)
+    )
+
+    write_log(
+        session["user_id"],
+        "Generate Password"
     )
 
     return render_template(
@@ -442,7 +455,7 @@ def delete_password(id):
     db.session.commit()
     write_log(
         session["user_id"],
-        "Delete Password"
+        f"Delete Password ({entry.website})"
     )
     return redirect(url_for("dashboard"))
 
@@ -497,6 +510,11 @@ def export_csv():
     response.headers[
         "Content-Disposition"
     ] = "attachment; filename=passwords.csv"
+    
+    write_log(
+        session["user_id"],
+        "Export CSV"
+    )
 
     return response
 
