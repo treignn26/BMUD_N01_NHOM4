@@ -228,7 +228,8 @@ def dashboard():
     for p in passwords:
 
         decrypted = decrypt_password(
-            p.encrypted_password
+            p.encrypted_password,
+            session["vault_key"]
         )
 
         strength = check_password_strength(
